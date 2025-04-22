@@ -1,0 +1,52 @@
+# This function is used in the Pets Setup.
+# It is used to place pets behind the player using vectors
+
+# Entities -> Vectors
+# (Based on these we calculate the differences in location between for ex. player and vectors)
+
+function layout(loc: location, amount: number) :: objects:
+    set {_total} to {_amount}
+    set {_arc_count} to 0
+    set {_remaining} to {_total}
+    
+    while {_remaining} > 0:
+        add 1 to {_arc_count}
+        if {_arc_count} is 1:
+            set {_arcs::%{_arc_count}%} to min(5, {_remaining})
+        else:
+            set {_arcs::%{_arc_count}%} to min({_arcs::%{_arc_count} - 1%} + 2, {_remaining})
+        remove {_arcs::%{_arc_count}%} from {_remaining}
+    
+    set {_base_radius} to 1
+    set {_center} to location of {_loc}
+    set pitch of {_center} to 0
+    set {_center} to location 1 under {_center}
+    set {_player_yaw} to yaw of {_loc}
+    set {_player_yaw_offset} to "-%{_player_yaw}%" parsed as number + 90
+    
+    set {_currentX} to 0
+    loop {_arc_count} times:
+        add 1 to {_currentX}
+        set {_current_arc} to {_arc_count} - (loop-value - 1)
+        set {_particles_in_arc} to {_arcs::%{_currentX}%}
+        
+        if {_particles_in_arc} is 0:
+            continue
+        
+        if {_arc_count} <= 1:
+            set {_radius} to {_base_radius}+1 - (({_current_arc} - 2) * {_base_radius} * 0)
+        else if {_arc_count} <= 2:
+            set {_radius} to {_base_radius}+1 - (({_current_arc} - 2) * {_base_radius} * 1)
+        else:
+            set {_radius} to {_base_radius}+{_arc_count}-1 - (({_current_arc} - 2) * {_base_radius} * 1)
+        
+        set {_angle_step} to 180 / ({_particles_in_arc} + 1)
+        set {_y} to y-coordinate of {_loc}
+        
+        loop {_particles_in_arc} times:
+            set {_current_angle} to {_player_yaw_offset} + (loop-value-2 * {_angle_step})
+            
+            set {_x} to {_radius} * sin({_current_angle})
+            set {_z} to {_radius} * cos({_current_angle})
+            add vector({_x}, 0, {_z}) to {_obj::*}
+    return {_obj::*}
