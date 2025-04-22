@@ -1,0 +1,222 @@
+command /xq [<text>] [<text>] [<text>] [<text>]:
+	trigger:
+		if arg-1 is not set:
+			send ""
+			send " <##00f818>&lXqedii <##00f818>Holograms"
+			send ""
+			send " <##00f818>/xq create <##e3f125>[name] [content] &3- &7Create a new hologram."
+			send " <##00f818>/xq addline <##e3f125>[name] [content] &3- &7Add a new line into hologram."
+			send " <##00f818>/xq removeline <##e3f125>[name] [line] &3- &7Remove line from hologram."
+			send " <##00f818>/xq setline <##e3f125>[name] [line] [content] &3- &7Set a new content to line."
+			send " <##00f818>/xq teleport <##e3f125>[name] &3- &7Teleports you to the given hologram."
+			send " <##00f818>/xq movehere <##e3f125>[name] &3- &7Teleports hologram to your location."
+			send " <##00f818>/xq distance <##e3f125>[name] [distance] &3- &7Set hologram view distance."
+			send " <##00f818>/xq remove <##e3f125>[name] &3- &7Delete an existing hologram."
+			send " <##00f818>/xq list &3- &7Lists all the holograms."
+			send ""
+		if arg-1 is "create" or "make" or "add":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				send "&cThis hologram already exist!"
+				stop
+			if arg-4 is set:
+				set {_content} to "%arg-3% %arg-4%"
+			else:
+				set {_content} to arg-3 ? "Edit hologram using &b/xq setline"
+			set {_name} to "Holo-%arg-2%"
+			set {Holo::Database::%arg-2%} to location at player
+			set {Holo::Database::%arg-2%::Content::*} to {_content}
+			set {Holo::Database::%arg-2%::Distance} to 64
+			updateHolo()
+		if arg-1 is "addline":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				if arg-4 is set:
+					add "%arg-3% %arg-4%" to {Holo::Database::%arg-2%::Content::*}
+				else:
+					add arg-3 to {Holo::Database::%arg-2%::Content::*}
+				set {Holo::Database::%arg-2%} to location 0.25 under {Holo::Database::%arg-2%}
+				updateHolo()
+				send "&aAdded line!"
+			else:
+				send "&cThis hologram doesn't exist!"
+		if arg-1 is "movehere" or "tphere":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				set {Holo::Database::%arg-2%} to location 1.25 under player
+				updateHolo()
+				send "&aSuccess!"
+			else:
+				send "&cThis hologram doesn't exist!"
+		if arg-1 is "removeline":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				if {Holo::Database::%arg-2%::Content::%arg-3%} is set:
+					if size of {Holo::Database::%arg-2%::Content::*} <= 1:
+						send "&cYou can't leave hologram without lines!"
+						stop
+					set {_content::*} to {Holo::Database::%arg-2%::Content::*}
+					delete {_content::%arg-3%}
+					loop {_content::*}:
+						if loop-value is set:
+							add loop-value to {_new::*}
+					set {Holo::Database::%arg-2%::Content::*} to {_new::*}
+					set {Holo::Database::%arg-2%} to location 0.25 above {Holo::Database::%arg-2%}
+					updateHolo()
+					send "&aRemoved line!"
+				else:
+					send "&cThis line doesn't exist! (1-%size of {Holo::Database::%arg-2%::Content::*}%)"
+			else:
+				send "&cThis hologram doesn't exist!"
+		if arg-1 is "setline":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				if {Holo::Database::%arg-2%::Content::%arg-3%} is set:
+					if arg-4 is not set:
+						send "&cSelect new hologram content!"
+						stop
+					set {Holo::Database::%arg-2%::Content::%arg-3%} to arg-4
+					updateHolo()
+					send "&aReplaced line!"
+				else:
+					send "&cThis line doesn't exist! (1-%size of {Holo::Database::%arg-2%::Content::*}%)"
+			else:
+				send "&cThis hologram doesn't exist!"
+		if arg-1 is "distance":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				if arg-3 is not set:
+					send "&cSelect hologram Distance!"
+					stop
+				set {Holo::Database::%arg-2%::Distance} to arg-3 parsed as number
+				send "&aSuccess!"
+			else:
+				send "&cThis hologram doesn't exist!"
+		if arg-1 is "teleport" or "tp":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				teleport player to {Holo::Database::%arg-2%}
+				send "&aSuccess!"
+			else:
+				send "&cThis hologram doesn't exist!"
+		if arg-1 is "remove" or "delete":
+			if arg-2 is not set:
+				send "&cSelect hologram name!"
+				stop
+			if {Holo::Database::%arg-2%} is set:
+				delete {Holo::Database::%arg-2%}
+				loop all text displays:
+					if name of loop-text display is "Holo-%arg-2%":
+						kill loop-text display
+				send "&aSuccess!"
+			else:
+				send "&cThis hologram doesn't exist!"
+		if arg-1 is "list":
+			if size of {Holo::Database::*} is 0:
+				send "&cThere are no holograms yet!"
+				stop
+			send "<##00f818>"
+			send " <##00f818>&lHolograms"
+			send ""
+			loop {Holo::Database::*}:
+				set {_tooltip::*} to {Holo::Database::%loop-index%::Content::*}
+				send formatted "  <##00f818>%loop-index% <tooltip:%{_tooltip::*}%>&e&lSHOW TEXT<reset>  <cmd:/xq tp %loop-index%><tooltip:&aClick here to teleport!>&b&lTELEPORT<reset>  <cmd:/xq remove %loop-index%><tooltip:&aClick here to remove!>&c&lDELETE"
+			send ""
+
+on load:
+	set {Bounce-In::*} to 0, 0.1, 0.25, 0.45, 0.7, 0.9, 1.05, 1.15, 1.2, 1.17, 1.13, 1.08, 1.04, 1.01, 1 
+	set {Bounce-Out::*} to 1, 1.03, 1.08, 1.12, 1.2, 1.1, 1.05, 0.95, 0.8, 0.6, 0.4, 0.2, 0.1, 0.03, 0
+	updateHolo()
+
+function updateHolo():
+	loop all text displays:
+		if name of loop-text display starts with "Holo-":
+			kill loop-text display
+	loop {Holo::Database::*}:
+		set {_lx} to loop-index
+		delete {HoloVisible::%{_lx}%::*}
+		spawn a text display at loop-value:
+			set display billboard of entity to center
+			set display scale of entity to vector(1,1,1)
+			set display text of entity to colored {Holo::Database::%{_lx}%::Content::*}
+			set name of entity to "Holo-%{_lx}%"
+			make entity disappear from all players
+
+function checkDistance(player: player):
+	loop {Holo::Database::*}:
+		if distance between {_player} and loop-value >= {Holo::Database::%loop-index%::Distance}:
+			visibility(loop-index, false, {_player})
+		else:
+			visibility(loop-index, true, {_player})
+
+function toggleAnimation(entity: entity, holo: text, toggle: boolean, player: player):
+	if {_toggle} is false:
+		set {HoloVisible::%{_holo}%::%{_player}%} to false
+		spawn a text display at {Holo::Database::%{_holo}%}:
+			set {_temp} to entity
+			set display billboard of entity to center
+			set display scale of entity to vector(1,1,1)
+			set interpolation start of entity to 0
+			set interpolation duration of entity to 20
+			set display text of entity to colored {Holo::Database::%{_holo}%::Content::*}
+			set name of entity to "Holo-%{_lx}%"
+		loop {Bounce-Out::*}:
+			set display scale of {_temp} to vector(loop-value,loop-value,loop-value)
+			set interpolation start of {_temp} to 0
+			set interpolation duration of {_temp} to 1
+			wait 1 tick
+			if loop-value is 1:
+				if {HoloVisible::%{_holo}%::%{_player}%} is false:
+					make {_entity} disappear from {_player}
+		kill {_temp}
+	else:
+		set {HoloVisible::%{_holo}%::%{_player}%} to true
+		spawn a text display at {Holo::Database::%{_holo}%}:
+			set {_temp} to entity
+			set display billboard of entity to center
+			set display scale of entity to vector(0,0,0)
+			set interpolation start of entity to 0
+			set interpolation duration of entity to 5
+			set display text of entity to colored {Holo::Database::%{_holo}%::Content::*}
+			set name of entity to "Holo-%{_lx}%"
+		wait 2 tick
+		set {HoloVisible::%{_holo}%::%{_player}%} to true
+		loop {Bounce-In::*}:
+			set display scale of {_temp} to vector(loop-value,loop-value,loop-value)
+			set interpolation start of {_temp} to 0
+			set interpolation duration of {_temp} to 1
+			wait 1 tick
+		if {HoloVisible::%{_holo}%::%{_player}%} is true:
+			make {_entity} appear to {_player}
+		wait 1 tick
+		kill {_temp}
+		
+
+function visibility(entity: text, toggle: boolean, player: player):
+	loop all text displays:
+		if name of loop-text display is "Holo-%{_entity}%":
+			if {_toggle} is false:
+				if {HoloVisible::%{_entity}%::%{_player}%} ? true is true:
+					toggleAnimation(loop-text display, {_entity}, {_toggle}, {_player})
+			else:
+				if {HoloVisible::%{_entity}%::%{_player}%} ? false is false:
+					toggleAnimation(loop-text display, {_entity}, {_toggle}, {_player})
+			stop
+
+every 0.2 second:
+	loop all players:
+		checkDistance(loop-player)
