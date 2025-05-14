@@ -3,7 +3,7 @@ function blockChange(loc: location, type: item, direction: boolean):
 	if {_direction} is false:
 		set block at {_loc} to air
 	else:
-		set {_loc} to location 0.5 under {_loc}
+		set {_loc} to location 0.66 under {_loc}
 	spawn item display at {_loc}:
 		set {_entity} to the display
 		set display scale of entity to vector(1,1,1)
@@ -13,13 +13,13 @@ function blockChange(loc: location, type: item, direction: boolean):
 	set {_Ease-InOut::*} to 0.1, 0.22, 0.36, 0.52, 0.68, 0.82, 0.92, 0.98, 1
 	loop {_Ease-InOut::*}:
 		if {_direction} is false:
-			teleport {_entity} to location loop-value/2 above {_loc}
+			teleport {_entity} to location loop-value/3 above {_loc}
 		else:
 			teleport {_entity} to location loop-value above {_loc}
 		wait 1 tick
 	wait 1 tick
 	if {_direction} is false:
-		set {_loc} to location 0.5 above {_loc}
+		set {_loc} to location 0.33 above {_loc}
 		set {_Ease-InOut::*} to reversed {_Ease-InOut::*}
 	else:
 		set {_loc} to location 1 above {_loc}
@@ -27,11 +27,11 @@ function blockChange(loc: location, type: item, direction: boolean):
 		if {_direction} is false:
 			teleport {_entity} to location 1-loop-value under {_loc}
 		else:
-			teleport {_entity} to location loop-value/2 under {_loc}
+			teleport {_entity} to location loop-value/3 under {_loc}
 		wait 1 tick
 	if {_direction} is true:
 		wait 3 tick
-		set block at location 1 under {_loc} to {_type}
+		set block at location 0 under {_loc} to {_type}
 	kill {_entity}
 
 function replaceBlock(loc: location, from: item, to: item):
@@ -56,8 +56,6 @@ command /lb:
 					if {_j} < {_n}:
 						set {_index} to {_i} * {_n} + {_j}
 						set {_number} to {_index} + 1
-						broadcast "%{_number}%"
-						replaceBlock({_block::%{_number}%}, cobblestone, stone)
-						wait 1 tick
-
-
+						replaceBlock({_block::%{_number}%}, stone, cobblestone)
+						if mod(loop-counter-2, 2) is 0: # Change 2 to increase or decrease speed
+							wait 1 tick
