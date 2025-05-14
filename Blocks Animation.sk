@@ -1,0 +1,44 @@
+command /example:
+	trigger:
+		set {_loc1} to targeted block
+		show 30 end rod with speed 0.1 at targeted block
+		show 30 firework's spark with speed 0.1 at targeted block
+		wait 1 second
+		set {_loc2} to targeted block
+		show 30 end rod with speed 0.1 at targeted block
+		show 30 firework's spark with speed 0.1 at targeted block
+		loop all blocks within {_loc1} and {_loc2}:
+			add location at loop-value to {_list::*}
+			set {_data-%location at loop-block%} to type of loop-value
+			set block at loop-block to air
+		wait 0.5 second
+		loop {_list::*}:
+			set {_loc} to location at loop-value
+			anim({_loc}, {_data-%{_loc}%})
+			wait 2 tick
+
+function anim(loc: location, type: item):
+	set {_location} to block at {_loc}
+	set {_loc} to location at {_location}
+	set {_end} to location 1.5 under {_location}
+	set {_loc2} to {_loc}
+	add random integer between -25 and 25 to x-coordinates of {_loc2}
+	add random integer between -25 and 25 to y-coordinates of {_loc2}
+	add random integer between -25 and 25 to z-coordinates of {_loc2}
+	set {_start} to {_loc2}
+	add 90 to yaw of {_loc}
+	spawn item display at {_loc2}:
+		set {_entity} to entity
+		set display item of entity to {_type}
+		set display teleport duration of entity to 50
+		set interpolation start of entity to 0
+		set interpolation duration of entity to 50
+		set display scale of entity to vector(0,0,0)
+		set display left rotation of {_entity} to quaternion(0, random number between 0.1 and 1.0, random number between 0.1 and 1.0, 0)
+	wait 2 tick
+	set display scale of {_entity} to vector(0.7,0.7,0.7)
+	set display left rotation of {_entity} to quaternion(0, 1, 0, 0)
+	teleport {_entity} to location at {_loc}
+	wait 2.6 seconds
+	kill {_entity}
+	set block at {_location} to {_type}
