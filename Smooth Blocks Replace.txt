@@ -1,0 +1,63 @@
+function blockChange(loc: location, type: item, direction: boolean):
+	add 180 to yaw of {_loc}
+	if {_direction} is false:
+		set block at {_loc} to air
+	else:
+		set {_loc} to location 0.5 under {_loc}
+	spawn item display at {_loc}:
+		set {_entity} to the display
+		set display scale of entity to vector(1,1,1)
+		set display item of entity to {_type}
+		set teleport duration of entity to 1 ticks
+	wait 2 ticks
+	set {_Ease-InOut::*} to 0.1, 0.22, 0.36, 0.52, 0.68, 0.82, 0.92, 0.98, 1
+	loop {_Ease-InOut::*}:
+		if {_direction} is false:
+			teleport {_entity} to location loop-value/2 above {_loc}
+		else:
+			teleport {_entity} to location loop-value above {_loc}
+		wait 1 tick
+	wait 1 tick
+	if {_direction} is false:
+		set {_loc} to location 0.5 above {_loc}
+		set {_Ease-InOut::*} to reversed {_Ease-InOut::*}
+	else:
+		set {_loc} to location 1 above {_loc}
+	loop {_Ease-InOut::*}:
+		if {_direction} is false:
+			teleport {_entity} to location 1-loop-value under {_loc}
+		else:
+			teleport {_entity} to location loop-value/2 under {_loc}
+		wait 1 tick
+	if {_direction} is true:
+		wait 3 tick
+		set block at location 1 under {_loc} to {_type}
+	kill {_entity}
+
+function replaceBlock(loc: location, from: item, to: item):
+	blockChange({_loc}, {_from}, false)
+	wait 0.7 second
+	blockChange({_loc}, {_to}, true)
+
+command /lb:
+	trigger:
+		set {_loc1} to location at 15, 99, 57 in world "world"
+		set {_loc2} to location at 19, 99, 61 in world "world"
+		loop all blocks within {_loc1} and {_loc2}:
+			set {_block::%loop-counter%} to location at loop-value
+		set {_n} to 5
+		set {_n} to 5
+		loop (2 * {_n} - 1) times:
+			set {_suma} to loop-value - 1
+			loop {_n} times:
+				set {_i} to (loop-value-2)- 1
+				set {_j} to {_suma} - {_i}
+				if {_j} >= 0:
+					if {_j} < {_n}:
+						set {_index} to {_i} * {_n} + {_j}
+						set {_number} to {_index} + 1
+						broadcast "%{_number}%"
+						replaceBlock({_block::%{_number}%}, cobblestone, stone)
+						wait 1 tick
+
+
